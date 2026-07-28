@@ -292,6 +292,10 @@
     return Math.min(Math.max(diff,1),TOTAL_DAYS);
   }
 
+  function getDeviceInfo(){
+    return navigator.platform+' | '+navigator.userAgent;
+  }
+
   async function loadData(){
     try{
       const { data, error } = await sb.from('workout_logs').select('day, completed');
@@ -353,7 +357,7 @@
     workoutLog[d]=!workoutLog[d];
     renderLog();
     try{
-      const { error } = await sb.from('workout_logs').upsert({ day: d, completed: workoutLog[d] });
+      const { error } = await sb.from('workout_logs').upsert({ day: d, completed: workoutLog[d], device_info: getDeviceInfo() });
       if(error) throw error;
     }catch(e){ console.error('save workout day failed', e); }
   }
@@ -443,7 +447,7 @@
     renderChart();
     weightInput.value='';
     try{
-      const { error } = await sb.from('weight_logs').upsert({ date, weight });
+      const { error } = await sb.from('weight_logs').upsert({ date, weight, device_info: getDeviceInfo() });
       if(error) throw error;
     }catch(e){ console.error('save weight entry failed', e); }
   }
