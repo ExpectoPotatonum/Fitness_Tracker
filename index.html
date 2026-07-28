@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12181A">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root{
     --bg:#12181A;
@@ -266,6 +273,11 @@
   const TYPE_CLASS = {push:'type-lift',pull:'type-lift',legs:'type-lift',recovery:'type-recovery',upper:'type-upper-lower',lower:'type-upper-lower',rest:'type-rest'};
   const TYPE_LABEL = {push:'Push',pull:'Pull',legs:'Legs',recovery:'Recovery',upper:'Upper',lower:'Lower',rest:'Rest'};
 
+  // ---- Supabase config: fill these in from your project's Settings > API page ----
+  const SUPABASE_URL = 'https://uroohtfoirjkstwvwyps.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_Xef2oc792W_Rer8pjCkQgA_WJJ3CRA4';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   let workoutLog = {};
   let weightLog = [];
   let chartInstance = null;
@@ -282,13 +294,16 @@
 
   async function loadData(){
     try{
-      const w=await window.storage.get('workout-log', false);
-      workoutLog = w && w.value ? JSON.parse(w.value) : {};
-    }catch(e){ workoutLog = {}; }
+      const { data, error } = await sb.from('workout_logs').select('day, completed');
+      if(error) throw error;
+      workoutLog = {};
+      (data||[]).forEach(row=>{ workoutLog[row.day] = row.completed; });
+    }catch(e){ console.error('load workout_logs failed', e); workoutLog = {}; }
     try{
-      const wl=await window.storage.get('weight-log', false);
-      weightLog = wl && wl.value ? JSON.parse(wl.value) : [];
-    }catch(e){ weightLog = []; }
+      const { data, error } = await sb.from('weight_logs').select('date, weight').order('date');
+      if(error) throw error;
+      weightLog = (data||[]).map(row=>({ date: row.date, weight: Number(row.weight) }));
+    }catch(e){ console.error('load weight_logs failed', e); weightLog = []; }
   }
 
   function renderHero(){
@@ -337,8 +352,10 @@
   async function toggleDay(d){
     workoutLog[d]=!workoutLog[d];
     renderLog();
-    try{ await window.storage.set('workout-log', JSON.stringify(workoutLog), false); }
-    catch(e){ console.error('save failed', e); }
+    try{
+      const { error } = await sb.from('workout_logs').upsert({ day: d, completed: workoutLog[d] });
+      if(error) throw error;
+    }catch(e){ console.error('save workout day failed', e); }
   }
 
   function renderEntries(){
@@ -375,8 +392,10 @@
     weightLog=weightLog.filter(e=>e.date!==date);
     renderEntries();
     renderChart();
-    try{ await window.storage.set('weight-log', JSON.stringify(weightLog), false); }
-    catch(e){ console.error(e); }
+    try{
+      const { error } = await sb.from('weight_logs').delete().eq('date', date);
+      if(error) throw error;
+    }catch(e){ console.error('delete entry failed', e); }
   }
 
   function renderChart(){
@@ -423,8 +442,10 @@
     renderEntries();
     renderChart();
     weightInput.value='';
-    try{ await window.storage.set('weight-log', JSON.stringify(weightLog), false); }
-    catch(e){ console.error(e); }
+    try{
+      const { error } = await sb.from('weight_logs').upsert({ date, weight });
+      if(error) throw error;
+    }catch(e){ console.error('save weight entry failed', e); }
   }
 
   function setupTabs(){
@@ -435,6 +456,12 @@
         btn.classList.add('active');
         document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
       });
+    });
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.error('SW register failed', e));
     });
   }
 
