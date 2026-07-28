@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>70-Day Training Camp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#12181A;
+    --surface:#1B2422;
+    --surface-raised:#212B29;
+    --hairline:#31403C;
+    --text:#EDEAE1;
+    --text-muted:#8B958F;
+    --brass:#C9A24B;
+    --amber:#B98A5E;
+    --sage:#7BA88C;
+    --slate:#57635F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:22px 18px 0;}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin:0 0 6px;}
+  .day-hero{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:.9;letter-spacing:.02em;margin:0;}
+  .day-hero .brass-num{color:var(--brass);}
+  .day-hero .of70{font-size:24px;color:var(--text-muted);margin-left:6px;}
+  .date-range{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);margin:6px 0 16px;}
+  .progress-track{height:6px;background:var(--surface-raised);border-radius:3px;overflow:hidden;margin-bottom:22px;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--brass));}
+
+  .tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--hairline);border-radius:8px;padding:3px;margin-bottom:20px;position:sticky;top:10px;z-index:5;}
+  .tab-btn{flex:1;background:transparent;border:0;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 4px;border-radius:6px;cursor:pointer;}
+  .tab-btn.active{background:var(--surface-raised);color:var(--text);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.03em;margin:28px 0 10px;color:var(--text);}
+  .section-title:first-child{margin-top:0;}
+  .section-sub{font-size:13px;color:var(--text-muted);margin:-4px 0 14px;line-height:1.55;}
+
+  .ledger{border-top:1px solid var(--hairline);}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--hairline);}
+  .ledger-label{font-size:14px;color:var(--text-muted);}
+  .ledger-value{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;}
+  .ledger-value.brass{color:var(--brass);}
+
+  .split-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--hairline);}
+  .split-row:first-child{border-top:1px solid var(--hairline);}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .split-day{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);width:32px;flex-shrink:0;text-transform:uppercase;}
+  .split-name{font-size:14px;font-weight:600;flex-shrink:0;width:64px;}
+  .split-focus{font-size:12.5px;color:var(--text-muted);}
+
+  details{border-bottom:1px solid var(--hairline);}
+  details:first-of-type{border-top:1px solid var(--hairline);}
+  summary{display:flex;align-items:center;gap:10px;padding:13px 0;cursor:pointer;list-style:none;font-weight:600;font-size:14.5px;}
+  summary::-webkit-details-marker{display:none;}
+  summary::marker{content:'';}
+  summary::after{content:'+';margin-left:auto;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:16px;}
+  details[open] summary::after{content:'\2013';}
+  .exercise-list{padding:0 0 14px;}
+  .exercise-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:13.5px;}
+  .exercise-name{color:var(--text);}
+  .exercise-sets{font-family:'IBM Plex Mono',monospace;color:var(--text-muted);flex-shrink:0;white-space:nowrap;}
+
+  .note-box{background:var(--surface);border:1px solid var(--hairline);border-left:3px solid var(--brass);border-radius:4px;padding:12px 14px;font-size:12.5px;color:var(--text-muted);line-height:1.6;margin:14px 0;}
+  .note-box b{color:var(--text);}
+
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;}
+
+  .log-summary{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-muted);margin-bottom:18px;}
+  .log-summary b{color:var(--text);font-size:16px;}
+
+  .week-block{margin-bottom:16px;}
+  .week-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase;}
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .day-cell{aspect-ratio:1;border-radius:6px;border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text);cursor:pointer;position:relative;background:var(--surface);transition:transform .1s ease;}
+  .day-cell:active{transform:scale(.92);}
+  .day-cell.type-lift{background:rgba(201,162,75,.16);border-color:rgba(201,162,75,.35);}
+  .day-cell.type-upper-lower{background:rgba(185,138,94,.16);border-color:rgba(185,138,94,.35);}
+  .day-cell.type-recovery{background:rgba(123,168,140,.14);border-color:rgba(123,168,140,.32);}
+  .day-cell.type-rest{background:transparent;border-style:dashed;color:var(--text-muted);}
+  .day-cell.done{background:var(--sage);border-color:var(--sage);color:#0F1512;font-weight:600;}
+  .day-cell.today{outline:2px solid var(--brass);outline-offset:1px;}
+
+  .stat-strip{display:flex;justify-content:space-between;padding:14px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);margin-bottom:20px;}
+  .stat-label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+  .stat-num{font-family:'IBM Plex Mono',monospace;font-size:17px;margin-top:2px;}
+
+  .log-form{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+  .log-form input{background:var(--surface);border:1px solid var(--hairline);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:9px 10px;flex:1;min-width:100px;}
+  .log-form button{background:var(--brass);border:0;border-radius:6px;color:#12181A;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;padding:9px 18px;cursor:pointer;}
+
+  .chart-box{background:var(--surface);border:1px solid var(--hairline);border-radius:8px;padding:14px 10px;margin-bottom:18px;}
+
+  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--hairline);font-size:13px;}
+  .entry-date{color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .entry-weight{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .entry-del{background:none;border:0;color:var(--text-muted);cursor:pointer;font-size:15px;padding:4px 6px;}
+  .empty-state{color:var(--text-muted);font-size:13px;padding:16px 0;text-align:center;border:1px dashed var(--hairline);border-radius:8px;}
+
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--hairline);font-size:11px;color:var(--text-muted);line-height:1.6;}
+
+  button:focus-visible, .day-cell:focus-visible, input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){ .day-cell{transition:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">70-Day Program</div>
+  <h1 class="day-hero">DAY <span class="brass-num" id="currentDay">1</span><span class="of70">/ 70</span></h1>
+  <div class="date-range">Aug 2 — Oct 10, 2026</div>
+  <div class="progress-track"><div class="progress-fill" id="heroProgress" style="width:1.4%"></div></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="log">Log</button>
+    <button class="tab-btn" data-tab="trend">Trend</button>
+  </div>
+
+  <div class="panel active" id="panel-overview">
+    <p class="section-sub">Est. maintenance ~2,000 kcal on a full-gym 5-day split with an open schedule outside it. The deficit below projects ~4–5 kg fat loss by Oct 10 — the zone where abs typically surface.</p>
+
+    <div class="section-title">Targets</div>
+    <div class="ledger">
+      <div class="ledger-row"><span class="ledger-label">Daily calories</span><span class="ledger-value brass">1,600 kcal</span></div>
+      <div class="ledger-row"><span class="ledger-label">Protein</span><span class="ledger-value">140 g</span></div>
+      <div class="ledger-row"><span class="ledger-label">Carbs</span><span class="ledger-value">145 g</span></div>
+      <div class="ledger-row"><span class="ledger-label">Fat</span><span class="ledger-value">50 g</span></div>
+      <div class="ledger-row"><span class="ledger-label">Deficit</span><span class="ledger-value">~500 kcal/day</span></div>
+    </div>
+    <div class="note-box"><b>Adjust as you go —</b> weigh in 2–3×/week, same conditions, and compare weekly averages. Losing under 0.3 kg/week after 2 weeks? Cut 100–150 kcal. Over 0.8 kg/week? Add 100–150 kcal back to protect muscle.</div>
+
+    <div class="section-title">The Split</div>
+    <div class="split-row"><span class="split-day">Mon</span><span class="dot" style="background:var(--brass)"></span><span class="split-name">Push</span><span class="split-focus">Chest / shoulders / triceps</span></div>
+    <div class="split-row"><span class="split-day">Tue</span><span class="dot" style="background:var(--brass)"></span><span class="split-name">Pull</span><span class="split-focus">Back / biceps</span></div>
+    <div class="split-row"><span class="split-day">Wed</span><span class="dot" style="background:var(--brass)"></span><span class="split-name">Legs</span><span class="split-focus">Quads / hams / glutes</span></div>
+    <div class="split-row"><span class="split-day">Thu</span><span class="dot" style="background:var(--sage)"></span><span class="split-name">Recovery</span><span class="split-focus">Walk or easy cardio</span></div>
+    <div class="split-row"><span class="split-day">Fri</span><span class="dot" style="background:var(--amber)"></span><span class="split-name">Upper</span><span class="split-focus">Balanced push/pull</span></div>
+    <div class="split-row"><span class="split-day">Sat</span><span class="dot" style="background:var(--amber)"></span><span class="split-name">Lower</span><span class="split-focus">Posterior chain</span></div>
+    <div class="split-row"><span class="split-day">Sun</span><span class="dot" style="background:var(--slate)"></span><span class="split-name">Rest</span><span class="split-focus">Full rest</span></div>
+
+    <div class="section-title">Sessions</div>
+    <details open>
+      <summary><span class="dot" style="background:var(--brass)"></span>Push</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Barbell bench press</span><span class="exercise-sets">4×6–8</span></div>
+        <div class="exercise-row"><span class="exercise-name">Seated DB shoulder press</span><span class="exercise-sets">3×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Incline DB press</span><span class="exercise-sets">3×10–12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Lateral raise</span><span class="exercise-sets">3×12–15</span></div>
+        <div class="exercise-row"><span class="exercise-name">Triceps rope pushdown</span><span class="exercise-sets">3×12–15</span></div>
+        <div class="exercise-row"><span class="exercise-name">Cable crunch</span><span class="exercise-sets">3×12–15</span></div>
+        <div class="exercise-row"><span class="exercise-name">Hanging leg raise</span><span class="exercise-sets">3×10–15</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--brass)"></span>Pull</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Deadlift <span style="color:var(--text-muted)">(alt. weekly w/ row)</span></span><span class="exercise-sets">3×5</span></div>
+        <div class="exercise-row"><span class="exercise-name">Pull-up / lat pulldown</span><span class="exercise-sets">4×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Chest-supported row</span><span class="exercise-sets">3×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Face pull</span><span class="exercise-sets">3×15</span></div>
+        <div class="exercise-row"><span class="exercise-name">DB or barbell curl</span><span class="exercise-sets">3×10–12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Ab wheel rollout</span><span class="exercise-sets">3×10</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--brass)"></span>Legs</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Back squat</span><span class="exercise-sets">4×6–8</span></div>
+        <div class="exercise-row"><span class="exercise-name">Romanian deadlift</span><span class="exercise-sets">3×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Leg press</span><span class="exercise-sets">3×10–12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Seated leg curl</span><span class="exercise-sets">3×12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Walking lunge</span><span class="exercise-sets">3×12/leg</span></div>
+        <div class="exercise-row"><span class="exercise-name">Standing calf raise</span><span class="exercise-sets">4×15</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--sage)"></span>Recovery</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Brisk walk or easy cycle</span><span class="exercise-sets">30–45 min</span></div>
+        <div class="exercise-row"><span class="exercise-name">Mobility / stretch</span><span class="exercise-sets">10 min</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--amber)"></span>Upper</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Incline barbell/DB press</span><span class="exercise-sets">3×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Seated cable row</span><span class="exercise-sets">3×8–10</span></div>
+        <div class="exercise-row"><span class="exercise-name">DB shoulder press</span><span class="exercise-sets">3×10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Lat pulldown</span><span class="exercise-sets">3×10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Cable crunch</span><span class="exercise-sets">3×15</span></div>
+        <div class="exercise-row"><span class="exercise-name">Russian twist</span><span class="exercise-sets">3×20</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--amber)"></span>Lower</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Hip thrust or deadlift</span><span class="exercise-sets">4×8</span></div>
+        <div class="exercise-row"><span class="exercise-name">Front / goblet squat</span><span class="exercise-sets">3×10</span></div>
+        <div class="exercise-row"><span class="exercise-name">Bulgarian split squat</span><span class="exercise-sets">3×10/leg</span></div>
+        <div class="exercise-row"><span class="exercise-name">Lying leg curl</span><span class="exercise-sets">3×12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Hanging leg raise</span><span class="exercise-sets">3×12</span></div>
+        <div class="exercise-row"><span class="exercise-name">Weighted plank</span><span class="exercise-sets">3×45–60s</span></div>
+      </div>
+    </details>
+    <details>
+      <summary><span class="dot" style="background:var(--slate)"></span>Rest</summary>
+      <div class="exercise-list">
+        <div class="exercise-row"><span class="exercise-name">Full rest — optional easy walk or stretch</span><span class="exercise-sets"></span></div>
+      </div>
+    </details>
+
+    <div class="note-box"><b>Daily walk —</b> with an open schedule right now, 8,000–10,000 steps/day is the biggest free lever you have on the deficit. Split it across 2–3 walks if that's easier.</div>
+    <div class="note-box"><b>Week 7 —</b> drop volume ~30% across every lift (deload). Ten weeks in a deficit adds up; a lighter week keeps the last stretch productive.</div>
+  </div>
+
+  <div class="panel" id="panel-log">
+    <div class="log-summary"><b id="doneCount">0</b> / 70 sessions logged</div>
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:var(--brass)"></span>Push/Pull/Legs</div>
+      <div class="legend-item"><span class="dot" style="background:var(--amber)"></span>Upper/Lower</div>
+      <div class="legend-item"><span class="dot" style="background:var(--sage)"></span>Recovery</div>
+      <div class="legend-item"><span class="dot" style="background:var(--slate)"></span>Rest</div>
+    </div>
+    <div id="weeksContainer"><div class="empty-state">Loading log…</div></div>
+  </div>
+
+  <div class="panel" id="panel-trend">
+    <div class="stat-strip">
+      <div class="stat"><div class="stat-label">Start</div><div class="stat-num">62.7 kg</div></div>
+      <div class="stat"><div class="stat-label">Goal</div><div class="stat-num" style="color:var(--brass)">~58 kg</div></div>
+      <div class="stat"><div class="stat-label">Body fat</div><div class="stat-num">21.6% → ~15%</div></div>
+    </div>
+    <div class="log-form">
+      <input type="date" id="entryDate">
+      <input type="number" id="entryWeight" placeholder="Weight kg" step="0.1">
+      <button id="addEntryBtn">Log</button>
+    </div>
+    <div class="chart-box" id="chartBox" style="display:none;"><canvas id="weightChart" height="180"></canvas></div>
+    <div class="empty-state" id="chartEmpty">Log a weigh-in to start your trend line.</div>
+    <div id="entriesList"><div class="empty-state">Loading…</div></div>
+  </div>
+
+  <footer>General fitness guidance, not medical advice. New to training or managing a health condition — check with a doctor before starting. Your entries here are stored privately and only visible to you.</footer>
+</div>
+
+<script>
+  const PROGRAM_START = new Date(2026,7,2);
+  const TOTAL_DAYS = 70;
+  const DAY_TYPES = ['push','pull','legs','recovery','upper','lower','rest'];
+  const TYPE_CLASS = {push:'type-lift',pull:'type-lift',legs:'type-lift',recovery:'type-recovery',upper:'type-upper-lower',lower:'type-upper-lower',rest:'type-rest'};
+  const TYPE_LABEL = {push:'Push',pull:'Pull',legs:'Legs',recovery:'Recovery',upper:'Upper',lower:'Lower',rest:'Rest'};
+
+  let workoutLog = {};
+  let weightLog = [];
+  let chartInstance = null;
+
+  function dayType(dayNum){ return DAY_TYPES[(dayNum-1)%7]; }
+  function dateForDay(dayNum){ const d=new Date(PROGRAM_START); d.setDate(d.getDate()+(dayNum-1)); return d; }
+  function fmtDate(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+  function currentDayNumber(){
+    const today=new Date();
+    const t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const diff=Math.round((t0-PROGRAM_START)/86400000)+1;
+    return Math.min(Math.max(diff,1),TOTAL_DAYS);
+  }
+
+  async function loadData(){
+    try{
+      const w=await window.storage.get('workout-log', false);
+      workoutLog = w && w.value ? JSON.parse(w.value) : {};
+    }catch(e){ workoutLog = {}; }
+    try{
+      const wl=await window.storage.get('weight-log', false);
+      weightLog = wl && wl.value ? JSON.parse(wl.value) : [];
+    }catch(e){ weightLog = []; }
+  }
+
+  function renderHero(){
+    const day=currentDayNumber();
+    document.getElementById('currentDay').textContent=day;
+    document.getElementById('heroProgress').style.width=(day/TOTAL_DAYS*100)+'%';
+  }
+
+  function renderLog(){
+    const container=document.getElementById('weeksContainer');
+    container.innerHTML='';
+    let doneCount=0;
+    for(const k in workoutLog) if(workoutLog[k]) doneCount++;
+    document.getElementById('doneCount').textContent=doneCount;
+    const today=currentDayNumber();
+
+    for(let w=0; w<10; w++){
+      const weekDiv=document.createElement('div');
+      weekDiv.className='week-block';
+      const startDay=w*7+1, endDay=w*7+7;
+      const label=document.createElement('div');
+      label.className='week-label';
+      label.textContent='Week '+(w+1)+' · '+fmtDate(dateForDay(startDay))+'–'+fmtDate(dateForDay(endDay));
+      weekDiv.appendChild(label);
+      const grid=document.createElement('div');
+      grid.className='week-grid';
+      for(let d=startDay; d<=endDay; d++){
+        const cell=document.createElement('div');
+        const type=dayType(d);
+        cell.className='day-cell '+TYPE_CLASS[type];
+        if(workoutLog[d]) cell.classList.add('done');
+        if(d===today) cell.classList.add('today');
+        cell.textContent=workoutLog[d] ? '\u2713' : d;
+        cell.title='Day '+d+' · '+TYPE_LABEL[type];
+        cell.tabIndex=0;
+        cell.setAttribute('role','button');
+        cell.addEventListener('click', ()=>toggleDay(d));
+        cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleDay(d); } });
+        grid.appendChild(cell);
+      }
+      weekDiv.appendChild(grid);
+      container.appendChild(weekDiv);
+    }
+  }
+
+  async function toggleDay(d){
+    workoutLog[d]=!workoutLog[d];
+    renderLog();
+    try{ await window.storage.set('workout-log', JSON.stringify(workoutLog), false); }
+    catch(e){ console.error('save failed', e); }
+  }
+
+  function renderEntries(){
+    const list=document.getElementById('entriesList');
+    if(!weightLog.length){
+      list.innerHTML='<div class="empty-state">No entries yet — log your first weigh-in above.</div>';
+      return;
+    }
+    const sorted=[...weightLog].sort((a,b)=> new Date(b.date)-new Date(a.date));
+    list.innerHTML='';
+    sorted.forEach(entry=>{
+      const row=document.createElement('div');
+      row.className='entry-row';
+      const d=new Date(entry.date+'T00:00:00');
+      const dateSpan=document.createElement('span');
+      dateSpan.className='entry-date';
+      dateSpan.textContent=fmtDate(d);
+      const weightSpan=document.createElement('span');
+      weightSpan.className='entry-weight';
+      weightSpan.textContent=entry.weight+' kg';
+      const del=document.createElement('button');
+      del.className='entry-del';
+      del.textContent='\u00d7';
+      del.setAttribute('aria-label','Delete entry');
+      del.addEventListener('click', ()=>deleteEntry(entry.date));
+      row.appendChild(dateSpan);
+      row.appendChild(weightSpan);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  async function deleteEntry(date){
+    weightLog=weightLog.filter(e=>e.date!==date);
+    renderEntries();
+    renderChart();
+    try{ await window.storage.set('weight-log', JSON.stringify(weightLog), false); }
+    catch(e){ console.error(e); }
+  }
+
+  function renderChart(){
+    const box=document.getElementById('chartBox');
+    const empty=document.getElementById('chartEmpty');
+    if(!weightLog.length){
+      box.style.display='none';
+      empty.style.display='block';
+      return;
+    }
+    box.style.display='block';
+    empty.style.display='none';
+    const ctx=document.getElementById('weightChart');
+    if(!ctx || typeof Chart==='undefined') return;
+    const sorted=[...weightLog].sort((a,b)=> new Date(a.date)-new Date(b.date));
+    const labels=sorted.map(e=>fmtDate(new Date(e.date+'T00:00:00')));
+    const data=sorted.map(e=>e.weight);
+    if(chartInstance) chartInstance.destroy();
+    chartInstance=new Chart(ctx,{
+      type:'line',
+      data:{ labels, datasets:[
+        { label:'Weight', data, borderColor:'#C9A24B', backgroundColor:'rgba(201,162,75,.12)', fill:true, tension:.3, pointRadius:3, pointBackgroundColor:'#C9A24B' },
+        { label:'Goal', data: labels.map(()=>58), borderColor:'#7BA88C', borderDash:[5,5], pointRadius:0, fill:false }
+      ]},
+      options:{
+        responsive:true,
+        plugins:{ legend:{ labels:{ color:'#8B958F', font:{family:"'IBM Plex Mono'",size:10} } } },
+        scales:{
+          x:{ ticks:{ color:'#8B958F', font:{size:10} }, grid:{ color:'#243330' } },
+          y:{ ticks:{ color:'#8B958F', font:{size:10} }, grid:{ color:'#243330' } }
+        }
+      }
+    });
+  }
+
+  async function addEntry(){
+    const dateInput=document.getElementById('entryDate');
+    const weightInput=document.getElementById('entryWeight');
+    const date=dateInput.value;
+    const weight=parseFloat(weightInput.value);
+    if(!date || !weight) return;
+    weightLog=weightLog.filter(e=>e.date!==date);
+    weightLog.push({date,weight});
+    renderEntries();
+    renderChart();
+    weightInput.value='';
+    try{ await window.storage.set('weight-log', JSON.stringify(weightLog), false); }
+    catch(e){ console.error(e); }
+  }
+
+  function setupTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      });
+    });
+  }
+
+  (async function init(){
+    setupTabs();
+    renderHero();
+    const dateInput=document.getElementById('entryDate');
+    dateInput.valueAsDate=new Date();
+    document.getElementById('addEntryBtn').addEventListener('click', addEntry);
+    await loadData();
+    renderLog();
+    renderEntries();
+    renderChart();
+  })();
+</script>
+</body>
+</html>
