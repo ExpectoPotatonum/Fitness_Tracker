@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-  :root{
+  :root{ 
     --bg:#12181A;
     --surface:#1B2422;
     --surface-raised:#212B29;
@@ -292,14 +292,8 @@
     return Math.min(Math.max(diff,1),TOTAL_DAYS);
   }
 
-  function getDeviceInfo() {
-    const ua = navigator.userAgent;
-    if (/iPhone/i.test(ua)) return 'iPhone';
-    if (/iPad/i.test(ua)) return 'iPad';
-    if (/Android/i.test(ua)) return 'Android';
-    if (/Macintosh/i.test(ua)) return 'Mac';
-    if (/Windows/i.test(ua)) return 'Windows';
-    return 'Web Browser';
+  function getDeviceInfo(){
+    return navigator.platform+' | '+navigator.userAgent;
   }
 
   async function loadData(){
@@ -465,7 +459,6 @@
         document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
-        if (btn.dataset.tab === 'trend') renderChart();
       });
     });
   }
