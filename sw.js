@@ -20,10 +20,24 @@ self.addEventListener('activate', (event) => {
 // Cache-first for the app shell, network for everything else (fonts, Supabase, Chart.js, CDN)
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  const isShell = ASSETS.some((a) => url.pathname.endsWith(a.replace('./', '')));
-  if (isShell) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
+  
+  // Only intercept requests going to our own origin
+  if (url.origin === location.origin) {
+    const isShell = ASSETS.some((a) => {
+      // Safely handle the root path
+      if (a === './') {
+        return url.pathname === '/' || url.pathname === '/index.html';
+      }
+      const suffix = a.replace('./', '');
+      return suffix !== '' && url.pathname.endsWith(suffix);
+    });
+
+    if (isShell) {
+      event.respondWith(
+        caches.match(event.request).then((cached) => cached || fetch(event.request))
+      );
+      // Return early so we don't fall through
+      return; 
+    }
   }
 });
